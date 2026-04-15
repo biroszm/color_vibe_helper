@@ -6,7 +6,7 @@
   <title>Bloomette — Color Mood Finder</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg: #F4F3EF;
@@ -15,7 +15,7 @@
       --border: #E5E3DD;
       --border-strong: #1A1A1A;
       --text: #1A1A1A;
-      --text-muted: #8A8A85;
+      --text-muted: #555555;
       --text-faint: #B8B7B1;
       --primary: #1A1A1A;
       --primary-hover: #000000;
@@ -26,7 +26,7 @@
 
       --font-serif: 'Instrument Serif', Georgia, serif;
       --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
-      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
 
     * {
@@ -63,12 +63,12 @@
       padding: 32px 24px;
       display: flex;
       flex-direction: column;
-      gap: 24px;
+      gap: 14px;
       overflow-y: auto;
     }
 
     .sidebar-left {
-      width: 260px;
+      width: 240px;
       border-right: 1px solid var(--border);
     }
 
@@ -77,57 +77,262 @@
       border-left: 1px solid var(--border);
     }
 
-    .panel-header {
+    .brush-selector {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+    }
+
+    .brush-btn {
+      padding: 9px 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 0;
+      cursor: pointer;
+      transition: all 0.15s;
+      border-radius: var(--radius-sm);
+    }
+
+    .brush-btn:hover {
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .brush-btn.active {
+      background: var(--text);
+      color: #FFFFFF;
+      border-color: var(--text);
+    }
+
+    .inspector {
+      position: absolute;
+      right: 32px;
+      top: 32px;
+      width: 240px;
+      max-height: calc(100% - 64px);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      z-index: 2;
+      transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .inspector.collapsed {
+      max-height: 40px;
+    }
+
+    .inspector-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: transparent;
+      border: none;
+      padding: 14px 18px;
+      min-height: 44px;
+      cursor: pointer;
       font-family: var(--font-mono);
       font-size: 10px;
       letter-spacing: 1.6px;
       text-transform: uppercase;
-      color: var(--text-muted);
-      padding-bottom: 16px;
-      margin: 0;
+      color: var(--text);
       border-bottom: 1px solid var(--border);
+      width: 100%;
+      transition: border-color 0.2s;
+    }
+
+    .inspector.collapsed .inspector-header {
+      border-bottom-color: transparent;
+    }
+
+    .inspector-caret {
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: transform 0.3s;
+    }
+
+    .inspector.collapsed .inspector-caret {
+      transform: rotate(180deg);
+    }
+
+    .inspector-body {
+      padding: 16px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .inspector .mini-canvas {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .toolbar {
+      position: absolute;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      box-shadow: 0 6px 24px rgba(26, 26, 26, 0.06);
+      z-index: 3;
+      white-space: nowrap;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 22px;
+      background: var(--border);
+      flex: none;
+    }
+
+    .toolbar .color-row {
+      padding: 4px 10px 4px 4px;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      background: var(--surface-soft);
+      gap: 8px;
+    }
+
+    .toolbar .color-picker {
+      width: 22px;
+      height: 22px;
+    }
+
+    .toolbar .color-value {
+      font-size: 11px;
+    }
+
+    .toolbar-brush {
+      display: flex;
+      gap: 2px;
+    }
+
+    .toolbar-brush .brush-btn {
+      padding: 7px 14px;
+      border-radius: 100px;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 400;
+    }
+
+    .toolbar-brush .brush-btn:hover {
+      background: var(--primary-soft);
+      color: var(--text);
+    }
+
+    .toolbar-brush .brush-btn.active {
+      background: var(--text);
+      color: #FFFFFF;
+    }
+
+    .toolbar-size {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 4px;
+    }
+
+    .toolbar-size input[type="range"] {
+      width: 80px;
+    }
+
+    .toolbar-size .brush-size-value {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      min-width: 32px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .toolbar-actions .action-btn {
+      flex: none;
+      padding: 7px 16px;
+      font-size: 13px;
+      font-weight: 400;
+      border-radius: 100px;
+      min-width: 0;
+    }
+
+    .panel-header {
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: -0.2px;
+      color: var(--text);
+      margin: 10px 0 2px;
+      padding: 0;
+    }
+
+    .panel-header:first-of-type,
+    .brand + .panel-header {
+      margin-top: 4px;
     }
 
     .brand {
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
+      gap: 4px;
+      padding-bottom: 8px;
     }
 
     .brand-name {
-      font-family: var(--font-serif);
-      font-weight: 400;
-      font-size: 44px;
-      letter-spacing: -0.5px;
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 34px;
+      letter-spacing: -0.8px;
       color: var(--text);
       margin: 0;
-      line-height: 1;
+      line-height: 1.05;
     }
 
     .brand-tagline {
-      font-family: var(--font-mono);
-      font-size: 10px;
+      font-family: var(--font-sans);
+      font-weight: 400;
+      font-size: 13px;
       color: var(--text-muted);
-      letter-spacing: 1.6px;
-      text-transform: uppercase;
+      letter-spacing: 0;
     }
 
     .tool-group {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
+    }
+
+    .tool-group[hidden] {
+      display: none;
     }
 
     .tool-group label,
     .section-title {
-      font-family: var(--font-mono);
-      font-weight: 400;
-      font-size: 10px;
-      color: var(--text-muted);
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
+      font-family: var(--font-sans);
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--text);
+      letter-spacing: 0;
     }
 
     input[type="range"],
@@ -142,13 +347,50 @@
     input[type="number"],
     input[type="file"] {
       border: none;
-      border-bottom: 1px solid var(--border);
       border-radius: 0;
-      padding: 8px 2px;
-      font-family: var(--font-mono);
+      padding: 4px 0;
+      font-family: var(--font-sans);
       font-size: 12px;
       background: transparent;
+      color: var(--text-muted);
+    }
+
+    input[type="file"]::file-selector-button {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 16px;
+      margin-right: 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 100px;
+      background: transparent;
       color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: var(--text);
+      color: #FFFFFF;
+    }
+
+    input[type="file"]::-webkit-file-upload-button {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      padding: 8px 16px;
+      margin-right: 10px;
+      border: 1px solid var(--border-strong);
+      border-radius: 100px;
+      background: transparent;
+      color: var(--text);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    input[type="file"]::-webkit-file-upload-button:hover {
+      background: var(--text);
+      color: #FFFFFF;
     }
 
     input[type="number"]:focus,
@@ -170,21 +412,66 @@
     .histogram-label,
     .status-text,
     .match-count {
+      font-family: var(--font-sans);
       font-size: 12px;
       color: var(--text-muted);
       word-break: break-word;
-      font-style: italic;
-      font-family: var(--font-serif);
+    }
+
+    .color-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface-soft);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .color-row:hover {
+      border-color: var(--border-strong);
     }
 
     .color-picker {
-      width: 100%;
-      height: 100px;
+      width: 24px;
+      height: 24px;
+      flex: none;
       border: 1px solid var(--border);
       background: none;
       padding: 0;
       cursor: pointer;
-      border-radius: var(--radius-md);
+      border-radius: 50%;
+      overflow: hidden;
+    }
+
+    .color-picker::-webkit-color-swatch-wrapper {
+      padding: 0;
+    }
+
+    .color-picker::-webkit-color-swatch {
+      border: none;
+      border-radius: 50%;
+    }
+
+    .color-picker::-moz-color-swatch {
+      border: none;
+      border-radius: 50%;
+    }
+
+    .color-row .color-value {
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .sidebar-divider {
+      height: 0;
+      margin: 12px 0;
     }
 
     .button-row {
@@ -193,17 +480,16 @@
     }
 
     .action-btn {
-      flex: 1;
-      padding: 11px 14px;
+      flex: none;
+      padding: 11px 18px;
       border: 1px solid var(--border-strong);
-      border-radius: var(--radius-md);
+      border-radius: 100px;
       background: var(--primary);
       color: #FFFFFF;
-      font-family: var(--font-mono);
-      font-size: 10px;
+      font-family: var(--font-sans);
+      font-size: 13px;
       font-weight: 500;
-      letter-spacing: 1.4px;
-      text-transform: uppercase;
+      letter-spacing: 0;
       cursor: pointer;
       transition: background 0.15s ease, color 0.15s ease;
     }
@@ -238,6 +524,7 @@
 
     .canvas-wrap {
       flex: 1;
+      position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -283,10 +570,10 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      font-family: var(--font-mono);
-      font-size: 10px;
+      font-family: var(--font-sans);
+      font-size: 12px;
       color: var(--text-muted);
-      letter-spacing: 0.3px;
+      letter-spacing: 0;
     }
 
     .legend-swatch {
@@ -331,11 +618,11 @@
     }
 
     .match-score {
-      font-family: var(--font-mono);
-      font-size: 10px;
+      font-family: var(--font-sans);
+      font-size: 12px;
       margin-top: 6px;
       color: var(--text-muted);
-      letter-spacing: 0.4px;
+      letter-spacing: 0;
       word-break: break-word;
     }
 
@@ -478,32 +765,8 @@
       <aside class="sidebar sidebar-left">
         <div class="brand">
           <h1 class="brand-name">Bloomette</h1>
-          <span class="brand-tagline">Color Mood Finder</span>
         </div>
 
-        <div class="tool-group">
-          <label for="colorPicker">Color</label>
-          <input class="color-picker" type="color" id="colorPicker" value="#1A1A1A" />
-          <div class="color-value"><span id="rgbValue">rgb(26, 26, 26)</span></div>
-        </div>
-
-        <div class="tool-group">
-          <label for="brushSize">Brush</label>
-          <input type="range" id="brushSize" min="1" max="50" value="8" />
-          <div class="brush-size-value"><span id="brushSizeValue">8</span> px</div>
-        </div>
-
-        <div class="button-row">
-          <button class="action-btn secondary" id="undoBtn" disabled>Undo</button>
-          <button class="action-btn secondary" id="clearCanvas">Clear</button>
-        </div>
-      </aside>
-
-      <main class="canvas-wrap">
-        <canvas id="drawingCanvas" width="1100" height="700"></canvas>
-      </main>
-
-      <aside class="sidebar sidebar-right">
         <div class="panel-header">Analysis</div>
 
         <div class="tool-group">
@@ -515,7 +778,7 @@
           <div class="section-title">Tone breakdown</div>
           <div class="histogram-label">Lightness, warmth &amp; coolness</div>
           <div class="chart-wrap">
-            <canvas id="labHistogramCanvas" class="mini-canvas" width="260" height="180"></canvas>
+            <canvas id="labHistogramCanvas" class="mini-canvas" width="220" height="90"></canvas>
           </div>
         </div>
 
@@ -523,38 +786,63 @@
           <div class="section-title">Palette</div>
           <div class="histogram-label">Most-used colors</div>
           <div class="chart-wrap">
-            <canvas id="pieChartCanvas" class="mini-canvas" width="260" height="260"></canvas>
+            <canvas id="pieChartCanvas" class="mini-canvas" width="150" height="150"></canvas>
           </div>
           <div class="legend" id="pieLegend"></div>
         </div>
-      </aside>
-    </div>
 
-    <section class="drawer closed" id="matchesDrawer">
-      <button class="drawer-toggle" id="drawerToggle" aria-expanded="false">
-        <span class="drawer-label-group">
-          <span class="drawer-label">Matching Imagery</span>
-          <span class="drawer-count" id="matchCount"></span>
-        </span>
-        <span class="drawer-caret" aria-hidden="true">↑</span>
-      </button>
+        <div class="panel-header">Matching Imagery</div>
 
-      <div class="drawer-content">
-        <div class="drawer-controls">
-          <div class="drawer-field">
-            <label for="topNInput">Matches</label>
-            <input type="number" id="topNInput" min="1" max="100" value="10" />
-          </div>
-          <div class="drawer-field">
-            <label for="csvFileInput">Index CSV (optional)</label>
-            <input type="file" id="csvFileInput" accept=".csv,text/csv" />
-          </div>
-          <button class="action-btn" id="findMatchesBtn">Find my bloom</button>
+        <div class="tool-group">
+          <label for="topNInput">Number of matches</label>
+          <input type="number" id="topNInput" min="1" max="100" value="10" />
         </div>
-        <div class="status-text" id="matchStatus">Ready when you are.</div>
+
+        <div class="tool-group">
+          <label for="csvFileInput">Index CSV (optional)</label>
+          <input type="file" id="csvFileInput" accept=".csv,text/csv" />
+        </div>
+
+        <button class="action-btn" id="findMatchesBtn">Find my bloom</button>
+        <div class="status-text" id="matchStatus"></div>
+        <div class="match-count" id="matchCount"></div>
         <div class="matches-grid" id="matchesGrid"></div>
-      </div>
-    </section>
+      </aside>
+
+      <main class="canvas-wrap">
+        <div class="toolbar">
+          <label class="color-row" for="colorPicker" title="Color">
+            <input class="color-picker" type="color" id="colorPicker" value="#1A1A1A" />
+            <span class="color-value" id="rgbValue">1A1A1A</span>
+          </label>
+
+          <div class="toolbar-divider"></div>
+
+          <div class="toolbar-brush" id="brushSelector">
+            <button type="button" class="brush-btn active" data-brush="ink">Ink</button>
+            <button type="button" class="brush-btn" data-brush="pencil">Pencil</button>
+            <button type="button" class="brush-btn" data-brush="marker">Marker</button>
+            <button type="button" class="brush-btn" data-brush="dry">Dry</button>
+          </div>
+
+          <div class="toolbar-divider"></div>
+
+          <div class="toolbar-size">
+            <input type="range" id="brushSize" min="1" max="50" value="8" />
+            <span class="brush-size-value"><span id="brushSizeValue">8</span> PX</span>
+          </div>
+
+          <div class="toolbar-divider"></div>
+
+          <div class="toolbar-actions">
+            <button class="action-btn secondary" id="undoBtn" disabled>Undo</button>
+            <button class="action-btn secondary" id="clearCanvas">Clear</button>
+          </div>
+        </div>
+
+        <canvas id="drawingCanvas" width="1100" height="700"></canvas>
+      </main>
+    </div>
   </div>
 
   <script>
@@ -579,18 +867,23 @@
     const matchCount = document.getElementById('matchCount');
     const matchesGrid = document.getElementById('matchesGrid');
 
-    const matchesDrawer = document.getElementById('matchesDrawer');
-    const drawerToggle = document.getElementById('drawerToggle');
+    const brushSelector = document.getElementById('brushSelector');
 
     let drawing = false;
     let currentColor = '#1A1A1A';
     let brushSize = Number(brushSizeInput.value);
+    let currentBrush = 'ink';
     let strokeHistory = [];
     let currentStroke = null;
     let currentCanvasFeatures = null;
 
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
+
+    function pseudoRandom(a, b) {
+      const n = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
+      return n - Math.floor(n);
+    }
 
     function hexToRgb(hex) {
       const cleanHex = hex.replace('#', '');
@@ -599,6 +892,10 @@
       const g = (bigint >> 8) & 255;
       const b = bigint & 255;
       return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function hexDisplay(hex) {
+      return hex.replace('#', '').toUpperCase();
     }
 
     function rgbStringFromObject(color) {
@@ -633,12 +930,22 @@
 
     function drawStroke(stroke) {
       if (!stroke || stroke.points.length === 0) return;
+      const brush = stroke.brush || 'ink';
+      if (brush === 'pencil') return drawPencilStroke(stroke);
+      if (brush === 'marker') return drawMarkerStroke(stroke);
+      if (brush === 'dry') return drawDryBrushStroke(stroke);
+      return drawInkStroke(stroke);
+    }
 
+    function drawInkStroke(stroke) {
+      ctx.save();
       ctx.strokeStyle = stroke.color;
       ctx.lineWidth = stroke.size;
+      ctx.globalAlpha = 1;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
       ctx.beginPath();
       ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
-
       if (stroke.points.length === 1) {
         ctx.lineTo(stroke.points[0].x + 0.01, stroke.points[0].y + 0.01);
       } else {
@@ -646,8 +953,89 @@
           ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
         }
       }
-
       ctx.stroke();
+      ctx.restore();
+    }
+
+    function forEachStampAlongStroke(stroke, spacingFactor, stampFn) {
+      const radius = stroke.size / 2;
+      const spacing = Math.max(0.5, radius * spacingFactor);
+      const points = stroke.points;
+      if (points.length === 1) {
+        stampFn(points[0].x, points[0].y, radius);
+        return;
+      }
+      for (let i = 1; i < points.length; i++) {
+        const x1 = points[i - 1].x;
+        const y1 = points[i - 1].y;
+        const x2 = points[i].x;
+        const y2 = points[i].y;
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const steps = Math.max(1, Math.floor(dist / spacing));
+        for (let s = 0; s <= steps; s++) {
+          const t = s / Math.max(1, steps);
+          stampFn(x1 + dx * t, y1 + dy * t, radius);
+        }
+      }
+    }
+
+    function drawPencilStroke(stroke) {
+      ctx.save();
+      ctx.fillStyle = stroke.color;
+      forEachStampAlongStroke(stroke, 0.35, (x, y, radius) => {
+        const jitter = radius * 0.4;
+        const jx = x + (pseudoRandom(x * 1.3, y * 2.1) - 0.5) * jitter;
+        const jy = y + (pseudoRandom(y * 1.7, x * 1.9) - 0.5) * jitter;
+        ctx.globalAlpha = 0.08 + pseudoRandom(jx, jy) * 0.14;
+        const r = radius * (0.55 + pseudoRandom(jx * 0.9, jy * 1.1) * 0.35);
+        ctx.beginPath();
+        ctx.arc(jx, jy, r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.restore();
+    }
+
+    function drawMarkerStroke(stroke) {
+      ctx.save();
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.size * 1.4;
+      ctx.globalAlpha = 0.4;
+      ctx.lineCap = 'square';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+      if (stroke.points.length === 1) {
+        ctx.lineTo(stroke.points[0].x + 0.01, stroke.points[0].y + 0.01);
+      } else {
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawDryBrushStroke(stroke) {
+      ctx.save();
+      ctx.fillStyle = stroke.color;
+      forEachStampAlongStroke(stroke, 0.3, (x, y, radius) => {
+        const bristles = 4 + Math.floor(radius / 2.5);
+        for (let b = 0; b < bristles; b++) {
+          if (pseudoRandom(x * 2.1 + b * 3.7, y * 1.9 + b * 5.3) < 0.45) continue;
+          const angle = pseudoRandom(x + b * 0.7, y + b * 1.3) * Math.PI * 2;
+          const dist = pseudoRandom(x * 0.8 + b, y * 1.1 + b) * radius;
+          const bx = x + Math.cos(angle) * dist;
+          const by = y + Math.sin(angle) * dist;
+          ctx.globalAlpha = 0.12 + pseudoRandom(bx, by) * 0.28;
+          const bristleSize = radius * (0.15 + pseudoRandom(bx * 1.3, by * 1.7) * 0.25);
+          ctx.beginPath();
+          ctx.arc(bx, by, bristleSize, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+      ctx.restore();
     }
 
     function redrawCanvas() {
@@ -768,7 +1156,7 @@
       const total = colorEntries.reduce((sum, entry) => sum + entry.count, 0);
       const centerX = pieCanvas.width / 2;
       const centerY = pieCanvas.height / 2;
-      const radius = 90;
+      const radius = Math.min(centerX, centerY) - 6;
       let startAngle = -Math.PI / 2;
 
       colorEntries.forEach(entry => {
@@ -1067,20 +1455,24 @@
       currentStroke = {
         color: currentColor,
         size: brushSize,
+        brush: currentBrush,
         points: [pos],
       };
       drawStroke(currentStroke);
-      updateCanvasAnalysis();
       e.preventDefault();
     }
 
     function draw(e) {
       if (!drawing || !currentStroke) return;
       const pos = getPointerPosition(e);
+      const prevPoint = currentStroke.points[currentStroke.points.length - 1];
       currentStroke.points.push(pos);
-      redrawCanvas();
-      drawStroke(currentStroke);
-      updateCanvasAnalysis();
+      drawStroke({
+        color: currentStroke.color,
+        size: currentStroke.size,
+        brush: currentStroke.brush,
+        points: [prevPoint, pos],
+      });
       e.preventDefault();
     }
 
@@ -1095,7 +1487,7 @@
 
     colorPicker.addEventListener('input', () => {
       currentColor = colorPicker.value;
-      rgbValue.textContent = hexToRgb(currentColor);
+      rgbValue.textContent = hexDisplay(currentColor);
     });
 
     brushSizeInput.addEventListener('input', () => {
@@ -1117,17 +1509,22 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       updateUndoButton();
       updateCanvasAnalysis();
-      matchStatus.textContent = 'Ready when you are.';
+      matchStatus.textContent = '';
       matchCount.textContent = '';
       matchesGrid.innerHTML = '';
     });
 
     findMatchesBtn.addEventListener('click', findMatches);
 
-    drawerToggle.addEventListener('click', () => {
-      const nowOpen = matchesDrawer.classList.toggle('closed');
-      drawerToggle.setAttribute('aria-expanded', nowOpen ? 'false' : 'true');
+    brushSelector.addEventListener('click', (event) => {
+      const target = event.target.closest('.brush-btn');
+      if (!target) return;
+      currentBrush = target.dataset.brush;
+      brushSelector.querySelectorAll('.brush-btn').forEach((btn) => {
+        btn.classList.toggle('active', btn === target);
+      });
     });
+
 
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);
@@ -1139,7 +1536,7 @@
     window.addEventListener('touchend', stopDrawing, { passive: false });
     canvas.addEventListener('touchcancel', stopDrawing, { passive: false });
 
-    rgbValue.textContent = hexToRgb(currentColor);
+    rgbValue.textContent = hexDisplay(currentColor);
     updateUndoButton();
     updateCanvasAnalysis();
   </script>

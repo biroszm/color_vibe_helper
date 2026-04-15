@@ -757,6 +757,192 @@
       grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
       gap: 8px;
     }
+
+    /* Onboarding modal */
+    .onboarding-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(26, 26, 26, 0.35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
+      opacity: 0;
+      animation: onboardFade 0.25s ease forwards;
+    }
+
+    .onboarding-overlay[hidden] {
+      display: none;
+    }
+
+    .onboarding-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 460px;
+      padding: 36px 36px 28px;
+      position: relative;
+      box-shadow: 0 20px 60px rgba(26, 26, 26, 0.18);
+      transform: translateY(8px);
+      animation: onboardRise 0.3s ease forwards;
+    }
+
+    @keyframes onboardFade {
+      to { opacity: 1; }
+    }
+
+    @keyframes onboardRise {
+      to { transform: translateY(0); }
+    }
+
+    .onboarding-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 28px;
+      height: 28px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      line-height: 1;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .onboarding-close:hover {
+      background: var(--border);
+      color: var(--text);
+    }
+
+    .onboarding-brand {
+      font-family: var(--font-sans);
+      font-weight: 700;
+      font-size: 28px;
+      letter-spacing: -0.6px;
+      color: var(--text);
+      margin: 0 0 6px;
+      line-height: 1.05;
+    }
+
+    .onboarding-subtitle {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--text-muted);
+      margin: 0 0 28px;
+      line-height: 1.45;
+    }
+
+    .onboarding-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .onboarding-step {
+      display: grid;
+      grid-template-columns: 32px 1fr;
+      gap: 14px;
+      align-items: start;
+    }
+
+    .onboarding-step-num {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text-muted);
+      padding-top: 2px;
+      letter-spacing: 0.4px;
+    }
+
+    .onboarding-step-title {
+      font-family: var(--font-sans);
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text);
+      margin: 0 0 2px;
+    }
+
+    .onboarding-step-desc {
+      font-family: var(--font-sans);
+      font-size: 13px;
+      color: var(--text-muted);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .onboarding-cta {
+      width: 100%;
+      padding: 12px 20px;
+      border: 1px solid var(--text);
+      border-radius: 100px;
+      background: var(--text);
+      color: #FFFFFF;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .onboarding-cta:hover {
+      background: transparent;
+      color: var(--text);
+    }
+
+    /* Help link — replay onboarding */
+    .help-link {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text-muted);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .help-link:hover {
+      border-color: var(--text);
+      color: var(--text);
+    }
+
+    /* Canvas empty-state hint */
+    .canvas-hint {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      color: var(--text-muted);
+      pointer-events: none;
+      opacity: 0.75;
+      letter-spacing: 0.2px;
+      transition: opacity 0.3s;
+    }
+
+    .canvas-hint[hidden] {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -841,7 +1027,42 @@
         </div>
 
         <canvas id="drawingCanvas" width="1100" height="700"></canvas>
+        <div class="canvas-hint" id="canvasHint">Start sketching to see your palette.</div>
       </main>
+    </div>
+  </div>
+
+  <button class="help-link" id="helpLink" type="button" aria-label="Show intro" title="Show intro">?</button>
+
+  <div class="onboarding-overlay" id="onboardingOverlay" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle" hidden>
+    <div class="onboarding-card">
+      <button class="onboarding-close" id="onboardingClose" type="button" aria-label="Close">×</button>
+      <h2 class="onboarding-brand" id="onboardingTitle">Bloomette</h2>
+      <p class="onboarding-subtitle">Paint a mood, find matching imagery.</p>
+      <ol class="onboarding-steps">
+        <li class="onboarding-step">
+          <span class="onboarding-step-num">01</span>
+          <div>
+            <p class="onboarding-step-title">Paint</p>
+            <p class="onboarding-step-desc">Sketch on the canvas with Ink, Pencil, Marker, or Dry brushes. Pick any color, any size.</p>
+          </div>
+        </li>
+        <li class="onboarding-step">
+          <span class="onboarding-step-num">02</span>
+          <div>
+            <p class="onboarding-step-title">Analyze</p>
+            <p class="onboarding-step-desc">Tone, palette, and color breakdown update in real time on the left.</p>
+          </div>
+        </li>
+        <li class="onboarding-step">
+          <span class="onboarding-step-num">03</span>
+          <div>
+            <p class="onboarding-step-title">Match</p>
+            <p class="onboarding-step-desc">Click “Find my bloom” to discover imagery that shares your palette.</p>
+          </div>
+        </li>
+      </ol>
+      <button class="onboarding-cta" id="onboardingCta" type="button">Start painting</button>
     </div>
   </div>
 
@@ -1539,6 +1760,44 @@
     rgbValue.textContent = hexDisplay(currentColor);
     updateUndoButton();
     updateCanvasAnalysis();
+
+    /* Onboarding */
+    const onboardingOverlay = document.getElementById('onboardingOverlay');
+    const onboardingCta = document.getElementById('onboardingCta');
+    const onboardingClose = document.getElementById('onboardingClose');
+    const helpLink = document.getElementById('helpLink');
+    const canvasHint = document.getElementById('canvasHint');
+    const ONBOARDING_KEY = 'bloomette_onboarded';
+
+    function openOnboarding() {
+      onboardingOverlay.hidden = false;
+    }
+
+    function closeOnboarding() {
+      onboardingOverlay.hidden = true;
+      try { localStorage.setItem(ONBOARDING_KEY, '1'); } catch (e) {}
+    }
+
+    function hideCanvasHint() {
+      if (canvasHint) canvasHint.hidden = true;
+    }
+
+    let seen = false;
+    try { seen = localStorage.getItem(ONBOARDING_KEY) === '1'; } catch (e) {}
+    if (!seen) openOnboarding();
+
+    onboardingCta.addEventListener('click', closeOnboarding);
+    onboardingClose.addEventListener('click', closeOnboarding);
+    onboardingOverlay.addEventListener('click', (e) => {
+      if (e.target === onboardingOverlay) closeOnboarding();
+    });
+    helpLink.addEventListener('click', openOnboarding);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !onboardingOverlay.hidden) closeOnboarding();
+    });
+
+    canvas.addEventListener('mousedown', hideCanvasHint, { once: true });
+    canvas.addEventListener('touchstart', hideCanvasHint, { once: true, passive: true });
   </script>
 </body>
 </html>

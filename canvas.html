@@ -331,13 +331,14 @@
     }
 
     .brand-name {
-      font-family: var(--font-display);
-      font-weight: 500;
-      font-size: 34px;
-      letter-spacing: -1px;
-      color: var(--text);
       margin: 0;
-      line-height: 1.05;
+      line-height: 0;
+    }
+
+    .brand-name img {
+      display: block;
+      height: 32px;
+      width: auto;
     }
 
     .brand-tagline {
@@ -684,7 +685,7 @@
     .legend-swatch {
       width: 12px;
       height: 12px;
-      border-radius: 0;
+      border-radius: 50%;
       border: 1px solid rgba(26, 26, 26, 0.12);
       flex-shrink: 0;
     }
@@ -987,13 +988,14 @@
     }
 
     .onboarding-brand {
-      font-family: var(--font-display);
-      font-weight: 500;
-      font-size: 28px;
-      letter-spacing: -0.8px;
-      color: var(--text);
       margin: 0;
-      line-height: 1.05;
+      line-height: 0;
+    }
+
+    .onboarding-brand img {
+      display: block;
+      height: 20px;
+      width: auto;
     }
 
     .onboarding-subtitle {
@@ -1116,7 +1118,7 @@
     <div class="main-row">
       <aside class="sidebar sidebar-left">
         <div class="brand">
-          <h1 class="brand-name">Bloomette</h1>
+          <h1 class="brand-name"><img src="logo.svg" alt="Bloomette" /></h1>
         </div>
 
         <div class="panel-header">
@@ -1245,7 +1247,7 @@
         <button class="onboarding-close" id="onboardingClose" type="button" aria-label="Close">×</button>
       </div>
       <div class="onboarding-row onboarding-row--title">
-        <h2 class="onboarding-brand" id="onboardingTitle">Bloomette</h2>
+        <h2 class="onboarding-brand" id="onboardingTitle"><img src="logo.svg" alt="Bloomette" /></h2>
       </div>
       <div class="onboarding-row onboarding-row--meta">
         <div class="onboarding-cell">

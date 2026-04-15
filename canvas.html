@@ -3,41 +3,115 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Simple Drawing App</title>
+  <title>Bloomette — Color Mood Finder</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
+    :root {
+      --bg: #F4F3EF;
+      --surface: #FFFFFF;
+      --surface-soft: #FAFAF7;
+      --border: #E5E3DD;
+      --border-strong: #1A1A1A;
+      --text: #1A1A1A;
+      --text-muted: #8A8A85;
+      --text-faint: #B8B7B1;
+      --primary: #1A1A1A;
+      --primary-hover: #000000;
+      --primary-soft: rgba(26, 26, 26, 0.04);
+      --radius-sm: 2px;
+      --radius-md: 4px;
+      --radius-lg: 6px;
+
+      --font-serif: 'Instrument Serif', Georgia, serif;
+      --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
     * {
       box-sizing: border-box;
     }
 
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.5;
       height: 100vh;
       overflow: hidden;
-      background: #f4f4f4;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
     }
 
     .app {
       display: flex;
+      flex-direction: column;
       height: 100vh;
       width: 100vw;
     }
 
+    .main-row {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+
     .sidebar {
-      width: 360px;
-      background: #ffffff;
-      border-right: 1px solid #ddd;
-      padding: 20px;
+      background: var(--surface);
+      padding: 32px 24px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
-      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+      gap: 24px;
       overflow-y: auto;
     }
 
-    .sidebar h2 {
+    .sidebar-left {
+      width: 260px;
+      border-right: 1px solid var(--border);
+    }
+
+    .sidebar-right {
+      width: 300px;
+      border-left: 1px solid var(--border);
+    }
+
+    .panel-header {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding-bottom: 16px;
       margin: 0;
-      font-size: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand-name {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: 44px;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      margin: 0;
+      line-height: 1;
+    }
+
+    .brand-tagline {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
     }
 
     .tool-group {
@@ -48,9 +122,12 @@
 
     .tool-group label,
     .section-title {
-      font-weight: bold;
-      font-size: 14px;
-      color: #222;
+      font-family: var(--font-mono);
+      font-weight: 400;
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
     }
 
     input[type="range"],
@@ -58,49 +135,105 @@
       width: 100%;
     }
 
+    input[type="range"] {
+      accent-color: var(--primary);
+    }
+
+    input[type="number"],
+    input[type="file"] {
+      border: none;
+      border-bottom: 1px solid var(--border);
+      border-radius: 0;
+      padding: 8px 2px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: transparent;
+      color: var(--text);
+    }
+
+    input[type="number"]:focus,
+    input[type="file"]:focus {
+      outline: none;
+      border-bottom-color: var(--text);
+    }
+
     .brush-size-value,
     .color-value,
-    .lab-value,
+    .lab-value {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text);
+      word-break: break-word;
+      letter-spacing: 0.2px;
+    }
+
     .histogram-label,
     .status-text,
     .match-count {
-      font-size: 14px;
-      color: #333;
+      font-size: 12px;
+      color: var(--text-muted);
       word-break: break-word;
+      font-style: italic;
+      font-family: var(--font-serif);
     }
 
     .color-picker {
       width: 100%;
-      height: 140px;
-      border: none;
+      height: 100px;
+      border: 1px solid var(--border);
       background: none;
       padding: 0;
       cursor: pointer;
+      border-radius: var(--radius-md);
     }
 
     .button-row {
       display: flex;
-      gap: 10px;
+      gap: 8px;
     }
 
     .action-btn {
       flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      background: #222;
-      color: white;
-      font-size: 14px;
+      padding: 11px 14px;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      background: var(--primary);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
       cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
     }
 
     .action-btn:hover {
-      background: #444;
+      background: var(--primary-hover);
     }
 
     .action-btn:disabled {
-      background: #999;
+      background: transparent;
+      color: var(--text-faint);
+      border-color: var(--border);
       cursor: not-allowed;
+    }
+
+    .action-btn.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+    }
+
+    .action-btn.secondary:hover {
+      background: var(--text);
+      color: #FFFFFF;
+    }
+
+    .action-btn.secondary:disabled {
+      background: transparent;
+      color: var(--text-faint);
+      border-color: var(--border);
     }
 
     .canvas-wrap {
@@ -108,14 +241,15 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 20px;
+      padding: 40px;
+      background: var(--bg);
     }
 
     canvas {
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: none;
       touch-action: none;
       max-width: 100%;
       max-height: 100%;
@@ -126,10 +260,10 @@
       width: 100%;
       height: auto;
       max-width: 260px;
-      background: #fff;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+      background: #FFFFFF;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      box-shadow: none;
     }
 
     .chart-wrap {
@@ -148,30 +282,32 @@
     .legend-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 12px;
-      color: #333;
+      gap: 10px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--text-muted);
+      letter-spacing: 0.3px;
     }
 
     .legend-swatch {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      border: 1px solid rgba(0, 0, 0, 0.15);
+      width: 12px;
+      height: 12px;
+      border-radius: 0;
+      border: 1px solid rgba(26, 26, 26, 0.12);
       flex-shrink: 0;
     }
 
     .matches-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
+      gap: 8px;
     }
 
     .match-card {
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      padding: 8px;
-      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 6px;
+      background: var(--surface);
     }
 
     .match-card a {
@@ -184,84 +320,241 @@
       width: 100%;
       height: 110px;
       object-fit: cover;
-      border-radius: 8px;
+      border-radius: 0;
       display: block;
-      background: #eee;
-      transition: transform 0.15s ease;
+      background: #ECEAE5;
+      transition: opacity 0.15s ease;
     }
 
     .match-card a:hover img {
-      transform: scale(1.02);
+      opacity: 0.85;
     }
 
     .match-score {
-      font-size: 12px;
+      font-family: var(--font-mono);
+      font-size: 10px;
       margin-top: 6px;
-      color: #333;
+      color: var(--text-muted);
+      letter-spacing: 0.4px;
       word-break: break-word;
+    }
+
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 0;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--text-muted);
+    }
+
+    .drawer {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      max-height: 60vh;
+      overflow: hidden;
+      transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .drawer.closed {
+      max-height: 52px;
+    }
+
+    .drawer-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface);
+      border: none;
+      padding: 0 28px;
+      height: 52px;
+      min-height: 52px;
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1.6px;
+      text-transform: uppercase;
+      color: var(--text);
+      border-bottom: 1px solid transparent;
+      transition: border-color 0.2s;
+      width: 100%;
+    }
+
+    .drawer:not(.closed) .drawer-toggle {
+      border-bottom-color: var(--border);
+    }
+
+    .drawer-label-group {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+    }
+
+    .drawer-label {
+      color: var(--text);
+      transition: color 0.15s;
+    }
+
+    .drawer-toggle:hover .drawer-label {
+      color: var(--text-muted);
+    }
+
+    .drawer-count {
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      font-size: 10px;
+      letter-spacing: 1.2px;
+      text-transform: none;
+    }
+
+    .drawer-caret {
+      transition: transform 0.35s ease;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .drawer.closed .drawer-caret {
+      transform: rotate(180deg);
+    }
+
+    .drawer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 22px 28px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .drawer-controls {
+      display: grid;
+      grid-template-columns: 140px 1fr auto;
+      gap: 24px;
+      align-items: end;
+      padding-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .drawer-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .drawer-field label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    .drawer-controls .action-btn {
+      flex: none;
+      width: auto;
+      min-width: 180px;
+      padding: 11px 24px;
+    }
+
+    .drawer-content .matches-grid {
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 8px;
     }
   </style>
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
-      <h2>Drawing Tools</h2>
-
-      <div class="tool-group">
-        <label for="colorPicker">Color Wheel</label>
-        <input class="color-picker" type="color" id="colorPicker" value="#000000" />
-        <div class="color-value">Selected color: <span id="rgbValue">rgb(0, 0, 0)</span></div>
-      </div>
-
-      <div class="tool-group">
-        <label for="brushSize">Brush Size</label>
-        <input type="range" id="brushSize" min="1" max="50" value="8" />
-        <div class="brush-size-value">Size: <span id="brushSizeValue">8</span> px</div>
-      </div>
-
-      <div class="button-row">
-        <button class="action-btn" id="undoBtn" disabled>Undo</button>
-        <button class="action-btn" id="clearCanvas">Clear</button>
-      </div>
-
-      <div class="tool-group">
-        <div class="section-title">Average Lab of drawing</div>
-        <div class="lab-value">Lab: <span id="avgLabValue">L: 0.0, a: 0.0, b: 0.0</span></div>
-      </div>
-
-      <div class="tool-group">
-        <div class="section-title">Lab histogram</div>
-        <div class="histogram-label">L, a, b distributions of painted pixels</div>
-        <div class="chart-wrap">
-          <canvas id="labHistogramCanvas" class="mini-canvas" width="260" height="180"></canvas>
+    <div class="main-row">
+      <aside class="sidebar sidebar-left">
+        <div class="brand">
+          <h1 class="brand-name">Bloomette</h1>
+          <span class="brand-tagline">Color Mood Finder</span>
         </div>
-      </div>
 
-      <div class="tool-group">
-        <div class="section-title">Used colors</div>
-        <div class="histogram-label">Pie chart of the most common painted colors</div>
-        <div class="chart-wrap">
-          <canvas id="pieChartCanvas" class="mini-canvas" width="260" height="260"></canvas>
+        <div class="tool-group">
+          <label for="colorPicker">Color</label>
+          <input class="color-picker" type="color" id="colorPicker" value="#1A1A1A" />
+          <div class="color-value"><span id="rgbValue">rgb(26, 26, 26)</span></div>
         </div>
-        <div class="legend" id="pieLegend"></div>
-      </div>
 
-      <div class="tool-group">
-        <div class="section-title">Find matching pictures</div>
-        <label for="topNInput">How many matches to show</label>
-        <input type="number" id="topNInput" min="1" max="100" value="10" />
-        <label for="csvFileInput">Optional: choose image_index.csv manually</label>
-        <input type="file" id="csvFileInput" accept=".csv,text/csv" />
-        <button class="action-btn" id="findMatchesBtn">Show matching pictures</button>
-        <div class="status-text" id="matchStatus">Ready to search.</div>
-        <div class="match-count" id="matchCount"></div>
+        <div class="tool-group">
+          <label for="brushSize">Brush</label>
+          <input type="range" id="brushSize" min="1" max="50" value="8" />
+          <div class="brush-size-value"><span id="brushSizeValue">8</span> px</div>
+        </div>
+
+        <div class="button-row">
+          <button class="action-btn secondary" id="undoBtn" disabled>Undo</button>
+          <button class="action-btn secondary" id="clearCanvas">Clear</button>
+        </div>
+      </aside>
+
+      <main class="canvas-wrap">
+        <canvas id="drawingCanvas" width="1100" height="700"></canvas>
+      </main>
+
+      <aside class="sidebar sidebar-right">
+        <div class="panel-header">Analysis</div>
+
+        <div class="tool-group">
+          <div class="section-title">Average tone</div>
+          <div class="lab-value"><span id="avgLabValue">L: 0.0, a: 0.0, b: 0.0</span></div>
+        </div>
+
+        <div class="tool-group">
+          <div class="section-title">Tone breakdown</div>
+          <div class="histogram-label">Lightness, warmth &amp; coolness</div>
+          <div class="chart-wrap">
+            <canvas id="labHistogramCanvas" class="mini-canvas" width="260" height="180"></canvas>
+          </div>
+        </div>
+
+        <div class="tool-group">
+          <div class="section-title">Palette</div>
+          <div class="histogram-label">Most-used colors</div>
+          <div class="chart-wrap">
+            <canvas id="pieChartCanvas" class="mini-canvas" width="260" height="260"></canvas>
+          </div>
+          <div class="legend" id="pieLegend"></div>
+        </div>
+      </aside>
+    </div>
+
+    <section class="drawer closed" id="matchesDrawer">
+      <button class="drawer-toggle" id="drawerToggle" aria-expanded="false">
+        <span class="drawer-label-group">
+          <span class="drawer-label">Matching Imagery</span>
+          <span class="drawer-count" id="matchCount"></span>
+        </span>
+        <span class="drawer-caret" aria-hidden="true">↑</span>
+      </button>
+
+      <div class="drawer-content">
+        <div class="drawer-controls">
+          <div class="drawer-field">
+            <label for="topNInput">Matches</label>
+            <input type="number" id="topNInput" min="1" max="100" value="10" />
+          </div>
+          <div class="drawer-field">
+            <label for="csvFileInput">Index CSV (optional)</label>
+            <input type="file" id="csvFileInput" accept=".csv,text/csv" />
+          </div>
+          <button class="action-btn" id="findMatchesBtn">Find my bloom</button>
+        </div>
+        <div class="status-text" id="matchStatus">Ready when you are.</div>
         <div class="matches-grid" id="matchesGrid"></div>
       </div>
-    </aside>
-
-    <main class="canvas-wrap">
-      <canvas id="drawingCanvas" width="1100" height="700"></canvas>
-    </main>
+    </section>
   </div>
 
   <script>
@@ -286,8 +579,11 @@
     const matchCount = document.getElementById('matchCount');
     const matchesGrid = document.getElementById('matchesGrid');
 
+    const matchesDrawer = document.getElementById('matchesDrawer');
+    const drawerToggle = document.getElementById('drawerToggle');
+
     let drawing = false;
-    let currentColor = '#000000';
+    let currentColor = '#1A1A1A';
     let brushSize = Number(brushSizeInput.value);
     let strokeHistory = [];
     let currentStroke = null;
@@ -399,7 +695,7 @@
       histogramCtx.fillStyle = '#666';
       histogramCtx.font = '13px Arial';
       histogramCtx.textAlign = 'center';
-      histogramCtx.fillText('No painted pixels yet', histogramCanvas.width / 2, histogramCanvas.height / 2);
+      histogramCtx.fillText('No colors yet — start drawing', histogramCanvas.width / 2, histogramCanvas.height / 2);
     }
 
     function drawHistogram(seriesList) {
@@ -461,7 +757,7 @@
       pieCtx.fillStyle = '#666';
       pieCtx.font = '13px Arial';
       pieCtx.textAlign = 'center';
-      pieCtx.fillText('No painted pixels yet', pieCanvas.width / 2, pieCanvas.height / 2);
+      pieCtx.fillText('No colors yet — start drawing', pieCanvas.width / 2, pieCanvas.height / 2);
       pieLegend.innerHTML = '';
     }
 
@@ -674,11 +970,11 @@
     function renderMatches(matches) {
       matchesGrid.innerHTML = '';
       if (matches.length === 0) {
-        matchCount.textContent = 'No matching images found.';
+        matchCount.textContent = 'No matching imagery found.';
         return;
       }
 
-      matchCount.textContent = `Showing ${matches.length} matching picture(s).`;
+      matchCount.textContent = `Showing ${matches.length} matching image(s).`;
 
       for (const match of matches) {
         const card = document.createElement('div');
@@ -729,14 +1025,14 @@
 
     async function findMatches() {
       if (!currentCanvasFeatures) {
-        matchStatus.textContent = 'Draw something on the canvas first.';
+        matchStatus.textContent = 'Draw something first to find your bloom.';
         matchCount.textContent = '';
         matchesGrid.innerHTML = '';
         return;
       }
 
       const requestedCount = Math.max(1, Math.floor(Number(topNInput.value) || 1));
-      matchStatus.textContent = 'Loading image index and calculating matches...';
+      matchStatus.textContent = 'Loading imagery and matching colors…';
       matchCount.textContent = '';
       matchesGrid.innerHTML = '';
 
@@ -755,8 +1051,8 @@
 
         renderMatches(rankedMatches);
         matchStatus.textContent = csvFileInput.files && csvFileInput.files[0]
-          ? 'Finished matching pictures using the selected CSV file.'
-          : 'Finished matching pictures.';
+          ? 'Found your bloom from the selected CSV file.'
+          : 'Found your bloom.';
       } catch (error) {
         matchStatus.textContent = 'Could not load image_index.csv automatically. Either run a local web server from this folder or use the CSV file picker above.';
         matchCount.textContent = '';
@@ -821,12 +1117,17 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       updateUndoButton();
       updateCanvasAnalysis();
-      matchStatus.textContent = 'Ready to search.';
+      matchStatus.textContent = 'Ready when you are.';
       matchCount.textContent = '';
       matchesGrid.innerHTML = '';
     });
 
     findMatchesBtn.addEventListener('click', findMatches);
+
+    drawerToggle.addEventListener('click', () => {
+      const nowOpen = matchesDrawer.classList.toggle('closed');
+      drawerToggle.setAttribute('aria-expanded', nowOpen ? 'false' : 'true');
+    });
 
     canvas.addEventListener('mousedown', startDrawing);
     canvas.addEventListener('mousemove', draw);

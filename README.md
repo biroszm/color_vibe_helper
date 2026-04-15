@@ -41,7 +41,10 @@ Supported formats: `.jpg`, `.jpeg`, `.png`, `.bmp`, `.webp`, `.gif`, `.tiff`.
 
 Open `canvas.html` in any modern browser — no build step required.
 
-## Author
+## Authors
 
-Made by **Aco Hsu** ([@aco-h](https://github.com/aco-h)).
+A side project brainstormed together by:
+
+- **Marton** ([@biroszm](https://github.com/biroszm)) — core architecture and engineering
+- **Aco Hsu** ([@aco-h](https://github.com/aco-h)) — UI/UX and visual design
 

@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simple Drawing App</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      background: #f4f4f4;
+    }
+
+    .app {
+      display: flex;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    .sidebar {
+      width: 360px;
+      background: #ffffff;
+      border-right: 1px solid #ddd;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+      overflow-y: auto;
+    }
+
+    .sidebar h2 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .tool-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .tool-group label,
+    .section-title {
+      font-weight: bold;
+      font-size: 14px;
+      color: #222;
+    }
+
+    input[type="range"],
+    input[type="number"] {
+      width: 100%;
+    }
+
+    .brush-size-value,
+    .color-value,
+    .lab-value,
+    .histogram-label,
+    .status-text,
+    .match-count {
+      font-size: 14px;
+      color: #333;
+      word-break: break-word;
+    }
+
+    .color-picker {
+      width: 100%;
+      height: 140px;
+      border: none;
+      background: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .button-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: #222;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      background: #444;
+    }
+
+    .action-btn:disabled {
+      background: #999;
+      cursor: not-allowed;
+    }
+
+    .canvas-wrap {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    canvas {
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      touch-action: none;
+      max-width: 100%;
+      max-height: 100%;
+      display: block;
+    }
+
+    .mini-canvas {
+      width: 100%;
+      height: auto;
+      max-width: 260px;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .chart-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #333;
+    }
+
+    .legend-swatch {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.15);
+      flex-shrink: 0;
+    }
+
+    .matches-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .match-card {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 8px;
+      background: #fafafa;
+    }
+
+    .match-card a {
+      display: block;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .match-card img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 8px;
+      display: block;
+      background: #eee;
+      transition: transform 0.15s ease;
+    }
+
+    .match-card a:hover img {
+      transform: scale(1.02);
+    }
+
+    .match-score {
+      font-size: 12px;
+      margin-top: 6px;
+      color: #333;
+      word-break: break-word;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <h2>Drawing Tools</h2>
+
+      <div class="tool-group">
+        <label for="colorPicker">Color Wheel</label>
+        <input class="color-picker" type="color" id="colorPicker" value="#000000" />
+        <div class="color-value">Selected color: <span id="rgbValue">rgb(0, 0, 0)</span></div>
+      </div>
+
+      <div class="tool-group">
+        <label for="brushSize">Brush Size</label>
+        <input type="range" id="brushSize" min="1" max="50" value="8" />
+        <div class="brush-size-value">Size: <span id="brushSizeValue">8</span> px</div>
+      </div>
+
+      <div class="button-row">
+        <button class="action-btn" id="undoBtn" disabled>Undo</button>
+        <button class="action-btn" id="clearCanvas">Clear</button>
+      </div>
+
+      <div class="tool-group">
+        <div class="section-title">Average Lab of drawing</div>
+        <div class="lab-value">Lab: <span id="avgLabValue">L: 0.0, a: 0.0, b: 0.0</span></div>
+      </div>
+
+      <div class="tool-group">
+        <div class="section-title">Lab histogram</div>
+        <div class="histogram-label">L, a, b distributions of painted pixels</div>
+        <div class="chart-wrap">
+          <canvas id="labHistogramCanvas" class="mini-canvas" width="260" height="180"></canvas>
+        </div>
+      </div>
+
+      <div class="tool-group">
+        <div class="section-title">Used colors</div>
+        <div class="histogram-label">Pie chart of the most common painted colors</div>
+        <div class="chart-wrap">
+          <canvas id="pieChartCanvas" class="mini-canvas" width="260" height="260"></canvas>
+        </div>
+        <div class="legend" id="pieLegend"></div>
+      </div>
+
+      <div class="tool-group">
+        <div class="section-title">Find matching pictures</div>
+        <label for="topNInput">How many matches to show</label>
+        <input type="number" id="topNInput" min="1" max="100" value="10" />
+        <label for="csvFileInput">Optional: choose image_index.csv manually</label>
+        <input type="file" id="csvFileInput" accept=".csv,text/csv" />
+        <button class="action-btn" id="findMatchesBtn">Show matching pictures</button>
+        <div class="status-text" id="matchStatus">Ready to search.</div>
+        <div class="match-count" id="matchCount"></div>
+        <div class="matches-grid" id="matchesGrid"></div>
+      </div>
+    </aside>
+
+    <main class="canvas-wrap">
+      <canvas id="drawingCanvas" width="1100" height="700"></canvas>
+    </main>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+    const colorPicker = document.getElementById('colorPicker');
+    const rgbValue = document.getElementById('rgbValue');
+    const brushSizeInput = document.getElementById('brushSize');
+    const brushSizeValue = document.getElementById('brushSizeValue');
+    const clearCanvasBtn = document.getElementById('clearCanvas');
+    const undoBtn = document.getElementById('undoBtn');
+    const avgLabValue = document.getElementById('avgLabValue');
+    const histogramCanvas = document.getElementById('labHistogramCanvas');
+    const histogramCtx = histogramCanvas.getContext('2d');
+    const pieCanvas = document.getElementById('pieChartCanvas');
+    const pieCtx = pieCanvas.getContext('2d');
+    const pieLegend = document.getElementById('pieLegend');
+    const topNInput = document.getElementById('topNInput');
+    const findMatchesBtn = document.getElementById('findMatchesBtn');
+    const csvFileInput = document.getElementById('csvFileInput');
+    const matchStatus = document.getElementById('matchStatus');
+    const matchCount = document.getElementById('matchCount');
+    const matchesGrid = document.getElementById('matchesGrid');
+
+    let drawing = false;
+    let currentColor = '#000000';
+    let brushSize = Number(brushSizeInput.value);
+    let strokeHistory = [];
+    let currentStroke = null;
+    let currentCanvasFeatures = null;
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    function hexToRgb(hex) {
+      const cleanHex = hex.replace('#', '');
+      const bigint = parseInt(cleanHex, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    function rgbStringFromObject(color) {
+      return `rgb(${color.r}, ${color.g}, ${color.b})`;
+    }
+
+    function updateUndoButton() {
+      undoBtn.disabled = strokeHistory.length === 0;
+    }
+
+    function getPointerPosition(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+
+      let clientX;
+      let clientY;
+
+      if (e.touches && e.touches.length > 0) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY,
+      };
+    }
+
+    function drawStroke(stroke) {
+      if (!stroke || stroke.points.length === 0) return;
+
+      ctx.strokeStyle = stroke.color;
+      ctx.lineWidth = stroke.size;
+      ctx.beginPath();
+      ctx.moveTo(stroke.points[0].x, stroke.points[0].y);
+
+      if (stroke.points.length === 1) {
+        ctx.lineTo(stroke.points[0].x + 0.01, stroke.points[0].y + 0.01);
+      } else {
+        for (let i = 1; i < stroke.points.length; i++) {
+          ctx.lineTo(stroke.points[i].x, stroke.points[i].y);
+        }
+      }
+
+      ctx.stroke();
+    }
+
+    function redrawCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (const stroke of strokeHistory) {
+        drawStroke(stroke);
+      }
+      updateCanvasAnalysis();
+    }
+
+    function srgbToLinear(value) {
+      const v = value / 255;
+      return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    }
+
+    function rgbToLab(r, g, b) {
+      const rl = srgbToLinear(r);
+      const gl = srgbToLinear(g);
+      const bl = srgbToLinear(b);
+
+      const x = (rl * 0.4124564 + gl * 0.3575761 + bl * 0.1804375) / 0.95047;
+      const y = (rl * 0.2126729 + gl * 0.7151522 + bl * 0.0721750) / 1.00000;
+      const z = (rl * 0.0193339 + gl * 0.1191920 + bl * 0.9503041) / 1.08883;
+
+      const f = (t) => t > 0.008856 ? Math.cbrt(t) : (7.787 * t) + (16 / 116);
+      const fx = f(x);
+      const fy = f(y);
+      const fz = f(z);
+
+      return {
+        l: (116 * fy) - 16,
+        a: 500 * (fx - fy),
+        b: 200 * (fy - fz)
+      };
+    }
+
+    function clearMiniCanvas(context, width, height) {
+      context.clearRect(0, 0, width, height);
+      context.fillStyle = '#ffffff';
+      context.fillRect(0, 0, width, height);
+    }
+
+    function drawEmptyHistogram() {
+      clearMiniCanvas(histogramCtx, histogramCanvas.width, histogramCanvas.height);
+      histogramCtx.fillStyle = '#666';
+      histogramCtx.font = '13px Arial';
+      histogramCtx.textAlign = 'center';
+      histogramCtx.fillText('No painted pixels yet', histogramCanvas.width / 2, histogramCanvas.height / 2);
+    }
+
+    function drawHistogram(seriesList) {
+      const width = histogramCanvas.width;
+      const height = histogramCanvas.height;
+      clearMiniCanvas(histogramCtx, width, height);
+
+      const padding = 18;
+      const chartWidth = width - padding * 2;
+      const chartHeight = height - padding * 2;
+      const bins = seriesList[0].values.length;
+      const maxValue = Math.max(1, ...seriesList.flatMap(series => series.values));
+      const groupWidth = chartWidth / bins;
+      const barWidth = groupWidth / 4;
+
+      histogramCtx.strokeStyle = '#bbb';
+      histogramCtx.beginPath();
+      histogramCtx.moveTo(padding, padding);
+      histogramCtx.lineTo(padding, height - padding);
+      histogramCtx.lineTo(width - padding, height - padding);
+      histogramCtx.stroke();
+
+      seriesList.forEach((series, seriesIndex) => {
+        histogramCtx.fillStyle = series.color;
+        series.values.forEach((value, i) => {
+          const x = padding + i * groupWidth + barWidth * (seriesIndex + 0.5);
+          const barHeight = (value / maxValue) * (chartHeight - 8);
+          const y = height - padding - barHeight;
+          histogramCtx.fillRect(x, y, barWidth, barHeight);
+        });
+      });
+
+      histogramCtx.font = '10px Arial';
+      histogramCtx.textAlign = 'center';
+      histogramCtx.fillStyle = '#444';
+      for (let i = 0; i < bins; i++) {
+        const x = padding + i * groupWidth + groupWidth / 2;
+        histogramCtx.fillText(String(i + 1), x, height - 4);
+      }
+
+      const legendY = 12;
+      const legendItems = [
+        { text: 'L', color: '#555555', x: 35 },
+        { text: 'a', color: '#c05050', x: 85 },
+        { text: 'b', color: '#5080c0', x: 135 }
+      ];
+
+      legendItems.forEach(item => {
+        histogramCtx.fillStyle = item.color;
+        histogramCtx.fillRect(item.x, legendY - 8, 10, 10);
+        histogramCtx.fillStyle = '#333';
+        histogramCtx.textAlign = 'left';
+        histogramCtx.fillText(item.text, item.x + 14, legendY);
+      });
+    }
+
+    function drawEmptyPieChart() {
+      clearMiniCanvas(pieCtx, pieCanvas.width, pieCanvas.height);
+      pieCtx.fillStyle = '#666';
+      pieCtx.font = '13px Arial';
+      pieCtx.textAlign = 'center';
+      pieCtx.fillText('No painted pixels yet', pieCanvas.width / 2, pieCanvas.height / 2);
+      pieLegend.innerHTML = '';
+    }
+
+    function drawPieChart(colorEntries) {
+      clearMiniCanvas(pieCtx, pieCanvas.width, pieCanvas.height);
+      pieLegend.innerHTML = '';
+
+      const total = colorEntries.reduce((sum, entry) => sum + entry.count, 0);
+      const centerX = pieCanvas.width / 2;
+      const centerY = pieCanvas.height / 2;
+      const radius = 90;
+      let startAngle = -Math.PI / 2;
+
+      colorEntries.forEach(entry => {
+        const sliceAngle = (entry.count / total) * Math.PI * 2;
+        pieCtx.beginPath();
+        pieCtx.moveTo(centerX, centerY);
+        pieCtx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
+        pieCtx.closePath();
+        pieCtx.fillStyle = entry.color;
+        pieCtx.fill();
+        pieCtx.strokeStyle = '#fff';
+        pieCtx.lineWidth = 1;
+        pieCtx.stroke();
+        startAngle += sliceAngle;
+
+        const percent = ((entry.count / total) * 100).toFixed(1);
+        const item = document.createElement('div');
+        item.className = 'legend-item';
+        item.innerHTML = `
+          <span class="legend-swatch" style="background:${entry.color}"></span>
+          <span>${entry.color} — ${percent}%</span>
+        `;
+        pieLegend.appendChild(item);
+      });
+    }
+
+    function quantizeColor(r, g, b, step = 32) {
+      const qr = Math.min(255, Math.round(r / step) * step);
+      const qg = Math.min(255, Math.round(g / step) * step);
+      const qb = Math.min(255, Math.round(b / step) * step);
+      return { r: qr, g: qg, b: qb, key: `${qr},${qg},${qb}` };
+    }
+
+    function normalizeArray(values) {
+      const total = values.reduce((sum, value) => sum + value, 0);
+      if (total === 0) return values.map(() => 0);
+      return values.map(value => value / total);
+    }
+
+    function updateCanvasAnalysis() {
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+      let totalL = 0;
+      let totalA = 0;
+      let totalB = 0;
+      let count = 0;
+
+      const lBins = new Array(8).fill(0);
+      const aBins = new Array(8).fill(0);
+      const bBins = new Array(8).fill(0);
+      const colorCounts = new Map();
+
+      for (let i = 0; i < imageData.length; i += 4) {
+        const r = imageData[i];
+        const g = imageData[i + 1];
+        const b = imageData[i + 2];
+        const alpha = imageData[i + 3];
+
+        const isTransparent = alpha === 0;
+        const isWhite = r === 255 && g === 255 && b === 255;
+
+        if (isTransparent || isWhite) continue;
+
+        const lab = rgbToLab(r, g, b);
+        totalL += lab.l;
+        totalA += lab.a;
+        totalB += lab.b;
+        count += 1;
+
+        const lIndex = Math.min(7, Math.max(0, Math.floor((lab.l / 100) * 8)));
+        const aIndex = Math.min(7, Math.max(0, Math.floor(((lab.a + 128) / 255) * 8)));
+        const bIndex = Math.min(7, Math.max(0, Math.floor(((lab.b + 128) / 255) * 8)));
+        lBins[lIndex] += 1;
+        aBins[aIndex] += 1;
+        bBins[bIndex] += 1;
+
+        const quantized = quantizeColor(r, g, b, 32);
+        const colorKey = quantized.key;
+        if (!colorCounts.has(colorKey)) {
+          colorCounts.set(colorKey, { color: rgbStringFromObject(quantized), count: 0 });
+        }
+        colorCounts.get(colorKey).count += 1;
+      }
+
+      if (count === 0) {
+        avgLabValue.textContent = 'L: 0.0, a: 0.0, b: 0.0';
+        currentCanvasFeatures = null;
+        drawEmptyHistogram();
+        drawEmptyPieChart();
+        return;
+      }
+
+      const avgL = totalL / count;
+      const avgA = totalA / count;
+      const avgBValue = totalB / count;
+      avgLabValue.textContent = `L: ${avgL.toFixed(1)}, a: ${avgA.toFixed(1)}, b: ${avgBValue.toFixed(1)}`;
+
+      drawHistogram([
+        { values: lBins, color: '#555555' },
+        { values: aBins, color: '#c05050' },
+        { values: bBins, color: '#5080c0' }
+      ]);
+
+      const topColors = Array.from(colorCounts.values())
+        .sort((first, second) => second.count - first.count)
+        .slice(0, 6);
+      drawPieChart(topColors);
+
+      currentCanvasFeatures = {
+        avgLab: [avgL, avgA, avgBValue],
+        histL: normalizeArray(lBins),
+        histA: normalizeArray(aBins),
+        histB: normalizeArray(bBins),
+        usedPixels: count
+      };
+    }
+
+    function euclideanDistance(first, second) {
+      let sum = 0;
+      for (let i = 0; i < first.length; i++) {
+        const diff = first[i] - second[i];
+        sum += diff * diff;
+      }
+      return Math.sqrt(sum);
+    }
+
+    function histogramDistance(queryFeatures, imageFeatures) {
+      return (
+        euclideanDistance(queryFeatures.histL, imageFeatures.histL) +
+        euclideanDistance(queryFeatures.histA, imageFeatures.histA) +
+        euclideanDistance(queryFeatures.histB, imageFeatures.histB)
+      );
+    }
+
+    function matchingScore(queryFeatures, imageFeatures) {
+      const avgLabDistance = euclideanDistance(queryFeatures.avgLab, imageFeatures.avgLab);
+      const histDistance = histogramDistance(queryFeatures, imageFeatures);
+      return 0.25 * avgLabDistance + 0.75 * histDistance;
+    }
+
+    function parseHistogramField(value) {
+      return value.split('|').map(Number);
+    }
+
+    function splitCsvLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < line.length; i++) {
+        const char = line[i];
+        const nextChar = line[i + 1];
+
+        if (char === '"') {
+          if (inQuotes && nextChar === '"') {
+            current += '"';
+            i += 1;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (char === ',' && !inQuotes) {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+
+      result.push(current);
+      return result;
+    }
+
+    function parseCsv(text) {
+      const lines = text.trim().split(/\r?\n/).filter(Boolean);
+      if (lines.length < 2) return [];
+
+      const headers = splitCsvLine(lines[0]);
+      return lines.slice(1).map(line => {
+        const cells = splitCsvLine(line);
+        const row = {};
+        headers.forEach((header, index) => {
+          row[header] = cells[index] ?? '';
+        });
+        return row;
+      });
+    }
+
+    function csvRowToFeatures(row) {
+      return {
+        fileName: row.file_name,
+        filePath: row.file_path,
+        avgLab: [Number(row.avg_lab_l), Number(row.avg_lab_a), Number(row.avg_lab_b)],
+        histL: parseHistogramField(row.hist_l),
+        histA: parseHistogramField(row.hist_a),
+        histB: parseHistogramField(row.hist_b),
+        usedPixels: Number(row.used_pixels || 0)
+      };
+    }
+
+    function renderMatches(matches) {
+      matchesGrid.innerHTML = '';
+      if (matches.length === 0) {
+        matchCount.textContent = 'No matching images found.';
+        return;
+      }
+
+      matchCount.textContent = `Showing ${matches.length} matching picture(s).`;
+
+      for (const match of matches) {
+        const card = document.createElement('div');
+        card.className = 'match-card';
+
+        const link = document.createElement('a');
+        link.href = match.fileName;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.title = 'Open image in a new tab';
+
+        const image = document.createElement('img');
+        image.src = match.fileName;
+        image.alt = 'Matching image';
+        image.loading = 'lazy';
+        image.onerror = () => {
+          image.alt = 'Could not load image';
+          image.style.display = 'none';
+        };
+
+        const score = document.createElement('div');
+        score.className = 'match-score';
+        score.textContent = `Score: ${match.score.toFixed(4)}`;
+
+        link.appendChild(image);
+        card.appendChild(link);
+        card.appendChild(score);
+        matchesGrid.appendChild(card);
+      }
+    }
+
+    async function readSelectedCsvFile(file) {
+      return await file.text();
+    }
+
+    async function loadCsvText() {
+      if (csvFileInput.files && csvFileInput.files[0]) {
+        matchStatus.textContent = 'Reading the selected CSV file...';
+        return await readSelectedCsvFile(csvFileInput.files[0]);
+      }
+
+      const response = await fetch('./image_index.csv', { cache: 'no-store' });
+      if (!response.ok) {
+        throw new Error(`Could not load image_index.csv (HTTP ${response.status})`);
+      }
+      return await response.text();
+    }
+
+    async function findMatches() {
+      if (!currentCanvasFeatures) {
+        matchStatus.textContent = 'Draw something on the canvas first.';
+        matchCount.textContent = '';
+        matchesGrid.innerHTML = '';
+        return;
+      }
+
+      const requestedCount = Math.max(1, Math.floor(Number(topNInput.value) || 1));
+      matchStatus.textContent = 'Loading image index and calculating matches...';
+      matchCount.textContent = '';
+      matchesGrid.innerHTML = '';
+
+      try {
+        const csvText = await loadCsvText();
+        const rows = parseCsv(csvText);
+        const imageFeatures = rows.map(csvRowToFeatures).filter(row => row.usedPixels > 0);
+
+        const rankedMatches = imageFeatures
+          .map(features => ({
+            ...features,
+            score: matchingScore(currentCanvasFeatures, features)
+          }))
+          .sort((first, second) => first.score - second.score)
+          .slice(0, requestedCount);
+
+        renderMatches(rankedMatches);
+        matchStatus.textContent = csvFileInput.files && csvFileInput.files[0]
+          ? 'Finished matching pictures using the selected CSV file.'
+          : 'Finished matching pictures.';
+      } catch (error) {
+        matchStatus.textContent = 'Could not load image_index.csv automatically. Either run a local web server from this folder or use the CSV file picker above.';
+        matchCount.textContent = '';
+        matchesGrid.innerHTML = '';
+        console.error(error);
+      }
+    }
+
+    function startDrawing(e) {
+      const pos = getPointerPosition(e);
+      drawing = true;
+      currentStroke = {
+        color: currentColor,
+        size: brushSize,
+        points: [pos],
+      };
+      drawStroke(currentStroke);
+      updateCanvasAnalysis();
+      e.preventDefault();
+    }
+
+    function draw(e) {
+      if (!drawing || !currentStroke) return;
+      const pos = getPointerPosition(e);
+      currentStroke.points.push(pos);
+      redrawCanvas();
+      drawStroke(currentStroke);
+      updateCanvasAnalysis();
+      e.preventDefault();
+    }
+
+    function stopDrawing() {
+      if (!drawing || !currentStroke) return;
+      drawing = false;
+      strokeHistory.push(currentStroke);
+      currentStroke = null;
+      updateUndoButton();
+      updateCanvasAnalysis();
+    }
+
+    colorPicker.addEventListener('input', () => {
+      currentColor = colorPicker.value;
+      rgbValue.textContent = hexToRgb(currentColor);
+    });
+
+    brushSizeInput.addEventListener('input', () => {
+      brushSize = Number(brushSizeInput.value);
+      brushSizeValue.textContent = brushSize;
+    });
+
+    undoBtn.addEventListener('click', () => {
+      if (strokeHistory.length === 0) return;
+      strokeHistory.pop();
+      redrawCanvas();
+      updateUndoButton();
+    });
+
+    clearCanvasBtn.addEventListener('click', () => {
+      strokeHistory = [];
+      currentStroke = null;
+      drawing = false;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      updateUndoButton();
+      updateCanvasAnalysis();
+      matchStatus.textContent = 'Ready to search.';
+      matchCount.textContent = '';
+      matchesGrid.innerHTML = '';
+    });
+
+    findMatchesBtn.addEventListener('click', findMatches);
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    window.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing, { passive: false });
+    canvas.addEventListener('touchmove', draw, { passive: false });
+    window.addEventListener('touchend', stopDrawing, { passive: false });
+    canvas.addEventListener('touchcancel', stopDrawing, { passive: false });
+
+    rgbValue.textContent = hexToRgb(currentColor);
+    updateUndoButton();
+    updateCanvasAnalysis();
+  </script>
+</body>
+</html>
